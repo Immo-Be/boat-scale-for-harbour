@@ -1,0 +1,71 @@
+.map-container {
+  height: 600px;
+  width: 100%;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+}
+
+.ship {
+  box-sizing: border-box;
+  position: relative;
+  margin: 20px;
+  background: transparent;
+  font-size: 20px;
+  opacity: 0.8;
+  rotate: -62deg;
+}
+
+.ship::before,
+.ship::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: ;
+}
+
+.ship::before {
+  border-width: 25px 0 25px 50px;
+  border-color: transparent transparent transparent #000;
+  left: -50px;
+}
+
+.ship::after {
+  border-width: 25px 50px 25px 0;
+  border-color: transparent #000 transparent transparent;
+  right: -50px;
+}
+
+.ship:hover {
+  opacity: 1;
+}
+
+.ship-form {
+  display: flex;
+  position: absolute;
+  top: 80px;
+  left: 28px;
+  flex-direction: column;
+  gap: 10px;
+  width: 200px;
+  margin: 0 auto;
+}
+
+.ship-form input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.ship-form button {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+.ship-form button:hover {
+  opacity: 0.8;
+}
