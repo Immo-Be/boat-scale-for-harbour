@@ -9,7 +9,16 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/turf": "^3.5.32",
     "typescript": "^5.2.2",
     "vite": "^5.0.8"
+  },
+  "dependencies": {
+    "@mapbox/geojson-normalize": "^0.0.1",
+    "@mapbox/mapbox-gl-draw": "^1.4.3",
+    "@turf/turf": "^6.5.0",
+    "maplibre-gl": "^3.6.2",
+    "turf": "^3.0.14",
+    "turf-normalize": "^1.0.2"
   }
 }

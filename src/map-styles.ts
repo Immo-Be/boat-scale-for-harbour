@@ -1,5 +1,4 @@
-// Define the map syle (OpenStreetMap raster tiles)
-const style = {
+export const mapStyle: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
     osm: {
@@ -17,7 +16,6 @@ const style = {
       maxzoom: 18,
     },
   },
-
   layers: [
     {
       id: "osm",
@@ -31,16 +29,3 @@ const style = {
     },
   ],
 };
-
-// Initialise the map
-const map = new maplibregl.Map({
-  container: "map",
-  style: style,
-  center: [1, 15],
-  zoom: 3,
-});
-
-console.log("🚀 ~ map:", map);
-
-// Add the navigation control
-map.addControl(new maplibregl.NavigationControl());
