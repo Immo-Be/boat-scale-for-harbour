@@ -1,6 +1,7 @@
-import { destination, point, polygon } from "turf";
+import turf, { destination, point, polygon } from "turf";
 import { DEFAULT_UNIT, Layer } from "../constants";
 import { canvas, map } from "../main";
+import transformTranslate from "@turf/transform-translate";
 
 // The factor by which the triangle protrudes from the rectangle aka the ship polygon
 // 0.15 means that the triangle in front makes up 15% of the total length of the ship
@@ -60,27 +61,46 @@ export const createPolygon = (
   return createdPolygon;
 };
 
-export const onMove = (e: any) => {
+function movePolygon(poly: any, newCenter: any): GeoJSON.Polygon {
+  // Calculate the current center of the polygon
+  const oldCenter = turf.center(poly);
+
+  // Calculate the distance and bearing from the old center to the new center
+  const distance = turf.distance(oldCenter, newCenter);
+  const bearing = turf.bearing(oldCenter, newCenter);
+
+  // Move the polygon to the new center
+  const movedPoly = transformTranslate(poly, distance, bearing);
+
+  return movedPoly;
+}
+
+export const onMouseMove = (e: any) => {
   const coords = e.lngLat;
 
   // Set a UI indicator for dragging.
   canvas.style.cursor = "grabbing";
 
-  // Update the Point feature in `geojson` coordinates
-  // and call setData to the source layer `point` on it.
-  //geojson.features[0].geometry.coordinates = [coords.lng, coords.lat];
-
-  const turfCenter = point([coords.lng, coords.lat]);
-
-  const updated_geojson = createPolygon(turfCenter, 50, 6.6);
-
   const polSource = map.getSource(
     Layer.POLYGONS_SOURCE
   ) as maplibregl.GeoJSONSource;
-  polSource.setData(updated_geojson);
+
+  const data = polSource._data;
+
+  if (!data || typeof data === "string") {
+    console.warn("No polygon data in the polSource._");
+    return;
+  }
+  // @ts-ignore
+  const turfPolygon = turf.polygon([data.geometry.coordinates[0]]);
+
+  const turfCenter = point([coords.lng, coords.lat]);
+  const movingPoly = movePolygon(turfPolygon, turfCenter);
+
+  polSource.setData(movingPoly);
 };
 
-export const onUp = (e: any) => {
+export const onMouseUp = (e: any) => {
   const coords = e.lngLat;
   console.log(`${coords.lat} - ${coords.lng}`);
 
@@ -91,6 +111,6 @@ export const onUp = (e: any) => {
   canvas.style.cursor = "";
 
   // Unbind mouse/touch events
-  map.off("mousemove", onMove);
-  map.off("touchmove", onMove);
+  map.off("mousemove", onMouseMove);
+  map.off("touchmove", onMouseMove);
 };
