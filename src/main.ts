@@ -105,3 +105,10 @@ map.on("touchstart", Layer.POLYGONS, (e) => {
   map.on("touchmove", onMouseMove);
   map.once("touchend", onMouseUp);
 });
+
+const sidebarToggle = document.querySelector(".sidebar-collapse-toggle");
+
+sidebarToggle!.addEventListener("click", () => {
+  const main = document.querySelector(".main-container");
+  main!.classList.toggle("sidebar-is-collapsed");
+});

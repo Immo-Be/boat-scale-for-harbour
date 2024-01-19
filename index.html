@@ -16,8 +16,30 @@
     <title>Boat Scaling</title>
   </head>
   <body>
-    <button id="rotate-button">Rotate</button>
-    <div id="map"></div>
+    <main class="main-container sidebar-is-collapsed">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h1 class="sidebar-title">Boat Scaling</h1>
+          <p class="sidebar-subtitle">A tool for scaling boats</p>
+        </div>
+        <h2>Add a Boat</h2>
+        <form class="entry-form" method="dialog">
+          <fieldset>
+            <div class="field-wrapper">
+              <input type="text" name="title" placeholder="Add a title" />
+              <div class="field-placeholder">
+                <span class="label">Title</span>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+        <button
+          class="sidebar-collapse-toggle"
+          aria-label="Toggle Sidebar"
+        ></button>
+      </aside>
+      <div class="map" id="map"></div>
+    </main>
     <script src="/src/main.ts" type="module"></script>
   </body>
 </html>
