@@ -1,0 +1,22 @@
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+
+
+MapboxDraw.constants.classes.CONTROL_BASE =
+  "maplibregl-ctrl" as "mapboxgl-ctrl";
+MapboxDraw.constants.classes.CONTROL_PREFIX =
+  "maplibregl-ctrl-" as "mapboxgl-ctrl-";
+MapboxDraw.constants.classes.CONTROL_GROUP =
+  "maplibregl-ctrl-group" as "mapboxgl-ctrl-group";
+// Convert center to a turf point
+
+const draw = new MapboxDraw({
+  displayControlsDefault: false,
+  controls: {
+    line_string: true,
+    polygon: true,
+    trash: true,
+  },
+});
+console.log("🚀 ~ draw:", draw);
+
+map.addControl(draw);

@@ -21,6 +21,12 @@ body,
   height: 100%;
 }
 
+h1,
+h2,
+h3 {
+  margin: 0;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -40,6 +46,10 @@ body,
   grid-template-columns: var(--sidebar-width-collapsed) 1fr;
 }
 
+.main-container.sidebar-is-collapsed .sidebar {
+  padding: 0;
+}
+
 .main-container.sidebar-is-collapsed > .sidebar > *:not(button) {
   display: none;
 }
@@ -49,6 +59,8 @@ body,
   position: relative;
   overflow: visible;
   z-index: 1;
+  border-right: 1px solid #ddd;
+  padding: var(--spacing-medium);
 }
 
 .sidebar::after {
