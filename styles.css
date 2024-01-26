@@ -8,6 +8,7 @@
   --spacing-medium: 16px;
   --spacing-large: 24px;
   --spacing-xlarge: 32px;
+  --custom-border-radius: 5px;
 }
 
 body {
@@ -50,8 +51,13 @@ h3 {
   padding: 0;
 }
 
+.main-container > .sidebar > *:not(button) {
+  transition: opacity 0.3s ease-in-out;
+}
+
 .main-container.sidebar-is-collapsed > .sidebar > *:not(button) {
-  display: none;
+  /* display: none; */
+  opacity: 0;
 }
 
 .sidebar {
@@ -71,6 +77,13 @@ h3 {
   width: 10px;
   height: 100%;
   box-shadow: 4px 0px 6px -1px rgba(60, 64, 67, 0.15);
+}
+
+.sidebar h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--text-color-heading);
+  margin-block: var(--spacing-medium);
 }
 
 .map {
@@ -102,10 +115,25 @@ h3 {
 }
 
 .entry-form > fieldset {
-  padding-block: var(--spacing-medium);
+  /* padding-block: var(--spacing-medium); */
   display: flex;
   flex-direction: column;
   gap: var(--spacing-medium);
+}
+
+.entry-form > fieldset > button[type="submit"] {
+  padding: var(--spacing-medium);
+  border-radius: var(--custom-border-radius);
+  color: var(--color-light-grey);
+  background-color: var(--accent-color);
+  border: none;
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Adding transformation when the button is active */
+.entry-form > fieldset > button[type="submit"]:active {
+  transform: scale(0.98);
+  /* transform: rotate(180deg); */
 }
 
 .main-container.sidebar-is-collapsed .sidebar-collapse-toggle::after {
@@ -118,6 +146,10 @@ h3 {
 
 .field-wrapper {
   position: relative;
+}
+
+.field-wrapper > label:first-child {
+  display: none;
 }
 
 .field-wrapper input {
@@ -172,5 +204,130 @@ input:focus::placeholder {
 }
 
 fieldset {
+  padding: 0;
   border: none;
+}
+
+/* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 30px;
+  height: 17px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 13px;
+  width: 13px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  -webkit-transition: 0.4s;
+  transition: 0.4s;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--accent-color);
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(13px);
+  -ms-transform: translateX(13px);
+  transform: translateX(13px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.switch-wrapper {
+  display: flex;
+  gap: var(--spacing-medium);
+}
+
+/* Dropdown */
+.select-dropdown,
+.select-dropdown * {
+  margin: 0;
+  padding: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+.select-dropdown {
+  position: relative;
+  background-color: #e6e6e6;
+  border-radius: var(--custom-border-radius);
+}
+.select-dropdown select {
+  font-size: 1rem;
+  font-weight: normal;
+  width: 100%;
+  padding: 8px 24px 8px 10px;
+  border: none;
+  background-color: transparent;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+.select-dropdown select:active,
+.select-dropdown select:focus {
+  outline: none;
+  box-shadow: none;
+}
+.select-dropdown:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 0;
+  height: 0;
+  margin-top: -2px;
+  border-top: 5px solid #aaa;
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+}
+
+/* color-picker */
+.color-picker {
+  display: flex;
+  gap: var(--spacing-medium);
+  align-items: center;
+  height: 2rem;
+}
+
+.color-picker > input[type="color"] {
+  flex: 1;
+  border-radius: var(--custom-border-radius);
+  padding: 0;
+  margin: 0;
 }

@@ -106,10 +106,8 @@ map.on("mousemove", Layer.POLYGONS, (event) => {
   const point = map.queryRenderedFeatures(event.point, {
     layers: [Layer.POINTS],
   });
-  console.log("🚀 ~ map.on ~ point:", point);
 
   const isPointInPolygon = Boolean(point.length);
-  console.log("🚀 ~ map.on ~ point:", isPointInPolygon);
 
   if (isPointInPolygon) {
     canvas.style.cursor = "";
@@ -137,8 +135,6 @@ map.on("mousemove", Layer.POLYGONS, (event) => {
     map.on("mousedown", Layer.POLYGONS, (event) => {
       event.preventDefault();
       isDragging = true;
-      console.log("🚀 ~ map.on ~ isDragging:", isDragging);
-      console.log("isPointInPolygon", isPointInPolygon);
 
       canvas.style.cursor = "grab";
 
@@ -172,4 +168,13 @@ const sidebarToggle = document.querySelector(".sidebar-collapse-toggle");
 sidebarToggle!.addEventListener("click", () => {
   const main = document.querySelector(".main-container");
   main!.classList.toggle("sidebar-is-collapsed");
+});
+
+const form = document.querySelector("form");
+
+form!.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target as HTMLFormElement);
+  const formProps = Object.fromEntries(formData);
+  console.log("🚀 ~ form!.addEventListener ~ formProps:", formProps);
 });
