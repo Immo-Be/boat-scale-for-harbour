@@ -1,5 +1,3 @@
-import maplibregl from "maplibre-gl";
-import { mapStyle } from "./map-styles";
 import {
   adjustLine,
   createPoint,
@@ -17,56 +15,139 @@ import {
 // Remove noImplicitAny to false in tsconfig.json once fixed
 import turf from "turf";
 import { CENTER, Layer } from "./constants";
+import { getMapInstance, getMapSource, initializeMapLayers } from "./utils/map";
+import { MapMouseEvent } from "maplibre-gl";
 
 // Initialize the map
-export const map = new maplibregl.Map({
-  container: "map",
-  style: mapStyle,
-  center: [CENTER.lng, CENTER.lat],
-  zoom: 17,
-});
+export const map = getMapInstance();
+
+const featureCollection: GeoJSON.FeatureCollection = {
+  type: "FeatureCollection",
+  features: [
+    // createPolygon(
+    //   turf.point([
+    //     CENTER.lng + Math.random() * 0.001,
+    //     CENTER.lat - Math.random() * 0.001,
+    //   ]),
+    //   50,
+    //   6.6
+    // ),
+  ],
+};
 
 export const canvas = map.getCanvasContainer();
-
-// Add zoom and scale controls to the map.
-const naviControl = new maplibregl.NavigationControl();
-map.addControl(naviControl);
-
-const scale = new maplibregl.ScaleControl({
-  unit: "metric",
-  maxWidth: 200,
-});
 
 let isRotating = false;
 let isDragging = false;
 
-map.addControl(scale);
+// const turfCenter = turf.point([
+//   CENTER.lng + Math.random() * 0.001,
+//   CENTER.lat - Math.random() * 0.001,
+// ]);
 
-const turfCenter = turf.point([CENTER.lng, CENTER.lat]);
+const boatAdded = () => {
+  const poly = createPolygon(
+    turf.point([
+      CENTER.lng + Math.random() * 0.001,
+      CENTER.lat - Math.random() * 0.001,
+    ]),
+    50,
+    6.6
+  );
+
+  featureCollection.features.push(poly);
+
+  const polygonSource = getMapSource(map, Layer.POLYGONS_SOURCE);
+
+  if (!polygonSource) {
+    console.warn("No valid polygon source", polygonSource);
+    return;
+  }
+
+  polygonSource.setData(featureCollection);
+
+  generateRotationPointAndLine(poly);
+};
+
+function generateRotationPointAndLine(geojson: GeoJSON.Polygon) {
+  const geoPoint = createPoint(geojson);
+
+  const pointSource = getMapSource(map, Layer.POINTS_SOURCE);
+
+  if (!pointSource || !geoPoint) {
+    console.warn("No valid point or  point source", pointSource, geoPoint);
+    return;
+  }
+
+  pointSource.setData(geoPoint);
+
+  const geoLine = createStringLine(geojson);
+
+  const lineSource = getMapSource(map, Layer.LINE_SOURCE);
+
+  if (!lineSource || !geoLine) {
+    console.warn("No valid line or line source", lineSource, geoLine);
+    return;
+  }
+
+  lineSource.setData(geoLine);
+
+  // const center = turf.centerOfMass(geojson);
+  // const point = createPoint(center);
+  // const line = createStringLine(center);
+  // const pointSource = getMapSource(map, Layer.POINTS_SOURCE);
+  // if (!pointSource) {
+  //   console.warn("No valid point source", pointSource);
+  //   return;
+  // }
+  // pointSource.setData(point);
+  // const lineSource = getMapSource(map, Layer.LINE_SOURCE);
+  // if (!lineSource) {
+  //   console.warn("No valid line source", lineSource);
+  //   return;
+  // }
+  // lineSource.setData(line);
+}
 
 map.once("styledata", () => {
-  const geojson = createPolygon(turfCenter, 50, 6.6);
+  initializeMapLayers(map, featureCollection);
+  // boatAdded();
+  // boatAdded();
 
-  const rotationPoint = turf.center(geojson as any);
+  // const collection = normalize();
+  // console.log("🚀 ~ map.once ~ collection:", collection);
 
-  createStringLine(rotationPoint);
-  createPoint(geojson);
+  // const geojson2 = createPolygon(
+  //   turf.point([
+  //     CENTER.lng + Math.random() * 0.001,
+  //     CENTER.lat - Math.random() * 0.001,
+  //   ]),
+  //   50,
+  //   6.6
+  // );
 
-  map.addSource(Layer.POLYGONS_SOURCE, {
-    type: "geojson",
-    data: geojson,
-  });
-  map.addLayer({
-    id: Layer.POLYGONS,
-    type: "fill",
-    source: Layer.POLYGONS_SOURCE,
-    layout: {},
-    paint: {
-      "fill-color": "#088",
-      "fill-opacity": 0.7,
-    },
-  });
-  map.moveLayer(Layer.POLYGONS, Layer.POINTS);
+  if (!featureCollection) {
+    console.warn("No valid feature featureCollection", featureCollection);
+    return;
+  }
+
+  // featureCollection.features.push(geojson2);
+  console.log("🚀 ~ map.once ~ featureCollection:", featureCollection);
+
+  // map.addSource(Layer.POLYGONS_SOURCE, {
+  //   type: "geojson",
+  //   data: featureCollection,
+  // });
+  // map.addLayer({
+  //   id: Layer.POLYGONS,
+  //   type: "fill",
+  //   source: Layer.POLYGONS_SOURCE,
+  //   layout: {},
+  //   paint: {
+  //     "fill-color": ["get", "color"],
+  //     "fill-opacity": 0.7,
+  //   },
+  // });
 });
 
 function onMouseRotateUp() {
@@ -78,13 +159,13 @@ function onMouseRotateUp() {
 
   // Reset rotation line
   adjustLine(null, null, true);
-  map.setPaintProperty(Layer.POINTS, "circle-opacity", 0);
+  map.setPaintProperty(Layer.POINTS_LAYER, "circle-opacity", 0);
   isRotating = false;
 }
 
-function onMouseUp(e: any) {
+function onMouseUp(e: MapMouseEvent) {
   const coords = e.lngLat;
-  // console.log(`${coords.lat} - ${coords.lng}`);
+  console.log(`${coords.lat} - ${coords.lng}`);
 
   // Print the coordinates of where the point had
   // finished being dragged to on the map.
@@ -100,18 +181,23 @@ function onMouseUp(e: any) {
 
 // When the cursor enters a feature in
 // the point layer, prepare for dragging.
-map.on("mousemove", Layer.POLYGONS, (event) => {
+map.on("mousemove", Layer.POLYGONS_LAYER, (event) => {
   //map.setPaintProperty('point', 'circle-color', '#3bb2d0');
 
   const point = map.queryRenderedFeatures(event.point, {
-    layers: [Layer.POINTS],
+    layers: [Layer.POINTS_LAYER],
   });
+
+  const polygon = map.queryRenderedFeatures(event.point, {
+    layers: [Layer.POLYGONS_LAYER],
+  })[0];
+  console.log("🚀 ~ map.on ~ polygon:", polygon);
 
   const isPointInPolygon = Boolean(point.length);
 
   if (isPointInPolygon) {
     canvas.style.cursor = "";
-    map.on("mousedown", Layer.POINTS, (e) => {
+    map.on("mousedown", Layer.POINTS_LAYER, (e) => {
       e.preventDefault();
 
       isRotating = true;
@@ -129,10 +215,10 @@ map.on("mousemove", Layer.POLYGONS, (event) => {
 
     // Get point layer and set color to red
     if (!isDragging) {
-      map.setPaintProperty(Layer.POINTS, "circle-opacity", 0.8);
+      map.setPaintProperty(Layer.POINTS_LAYER, "circle-opacity", 0.8);
     }
 
-    map.on("mousedown", Layer.POLYGONS, (event) => {
+    map.on("mousedown", Layer.POLYGONS_LAYER, (event) => {
       event.preventDefault();
       isDragging = true;
 
@@ -144,12 +230,12 @@ map.on("mousemove", Layer.POLYGONS, (event) => {
   }
 });
 
-map.on("mouseleave", Layer.POLYGONS, () => {
+map.on("mouseleave", Layer.POLYGONS_LAYER, () => {
   canvas.style.cursor = "";
 
   // Reset the point layer's color
   if (!isRotating) {
-    map.setPaintProperty(Layer.POINTS, "circle-opacity", 0);
+    map.setPaintProperty(Layer.POINTS_LAYER, "circle-opacity", 0);
   }
 });
 
@@ -176,5 +262,7 @@ form!.addEventListener("submit", (e) => {
   e.preventDefault();
   const formData = new FormData(e.target as HTMLFormElement);
   const formProps = Object.fromEntries(formData);
+  boatAdded();
+
   console.log("🚀 ~ form!.addEventListener ~ formProps:", formProps);
 });

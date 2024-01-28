@@ -1,9 +1,12 @@
-import turf, { destination, lineString, point, polygon } from "turf";
+import turf, { destination, lineString, point } from "turf";
 import { DEFAULT_UNIT, Layer } from "../constants";
 import { canvas, map } from "../main";
 import transformTranslate from "@turf/transform-translate";
 import rotate from "@turf/transform-rotate";
 import { GeoJSONSource } from "maplibre-gl";
+import { getCenterOfPolygon } from "./map";
+import { polygon } from "@turf/helpers";
+import { v4 as uuidv4 } from "uuid";
 
 // The factor by which the triangle protrudes from the rectangle aka the ship polygon
 // 0.15 means that the triangle in front makes up 15% of the total length of the ship
@@ -46,73 +49,64 @@ export const createPolygon = (
   );
 
   // Create the polygon with a triangle on the right side
-  const createdPolygon = polygon([
+  const createdPolygon = polygon(
     [
-      [minLng, minLat],
-      [minLng, maxLat],
-      [maxLng, maxLat],
       [
-        trianglePoint.geometry.coordinates[0],
-        trianglePoint.geometry.coordinates[1],
+        [minLng, minLat],
+        [minLng, maxLat],
+        [maxLng, maxLat],
+        [
+          trianglePoint.geometry.coordinates[0],
+          trianglePoint.geometry.coordinates[1],
+        ],
+        [maxLng, minLat],
+        [minLng, minLat],
       ],
-      [maxLng, minLat],
-      [minLng, minLat],
     ],
-  ]);
+    {
+      color: (() => {
+        const letters = "0123456789ABCDEF";
+        let color = "#";
+        for (let i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+      })(),
+      // Todo: set
+      id: uuidv4(),
+    }
+  );
 
   return createdPolygon;
 };
 
-export const createPoint = (polygon: any) => {
+export const createPoint = (polygon: GeoJSON.Polygon) => {
   // Calculate the middle of the polygon
-  const rotationPoint = turf.center(polygon as any);
-  const source = Layer.POINTS_SOURCE;
+  const rotationPoint = getCenterOfPolygon(polygon);
 
-  map.addSource(source, {
-    type: "geojson",
-    data: rotationPoint,
-  });
-
-  map.addLayer({
-    id: Layer.POINTS,
-    type: "circle",
-    source: source,
-    paint: {
-      "circle-radius": 6,
-      "circle-color": "red",
-      "circle-opacity": 0,
-      // @ts-ignore
-      "circle-opacity-transition": {
-        duration: 0,
-      },
-    },
-  });
+  return rotationPoint;
 };
 
-export const createStringLine = (center: any) => {
+export const createStringLine = (geojson: GeoJSON.Polygon) => {
   // Create a line from the center of the polygon to the point above
-  const lineToAbove = lineString(
+
+  // const center = turf.center(geojson);
+  // Get center of polygon
+  const center = getCenterOfPolygon(geojson);
+
+  if (!center) {
+    console.warn("No valid center", center);
+    return null;
+  }
+
+  const line = lineString(
     [center.geometry.coordinates, center.geometry.coordinates],
     {
       strokeWidth: 3, // Adjust the value to make the line thicker
     }
   );
 
-  // Add the new source and layer
-  map.addSource(Layer.LINE_SOURCE, {
-    type: "geojson",
-    data: lineToAbove,
-  });
-
-  map.addLayer({
-    id: Layer.LINE,
-    type: "line",
-    source: Layer.LINE_SOURCE,
-    paint: {
-      "line-color": "#f00",
-      "line-width": 3,
-    },
-  });
+  return line;
 };
 
 function movePolygon(poly: any, newCenter: any): GeoJSON.Polygon {
@@ -130,10 +124,10 @@ function movePolygon(poly: any, newCenter: any): GeoJSON.Polygon {
 }
 
 function movePoint(center): GeoJSON.Point {
-  const movedPoint = point([
-    center.geometry.coordinates[0],
-    center.geometry.coordinates[1],
-  ]);
+  // const movedPoint = point([
+  //   center.geometry.coordinates[0],
+  //   center.geometry.coordinates[1],
+  // ]);
 
   // Calculate the current center of the polygon
   // const oldCenter = turf.center(point);
@@ -148,8 +142,8 @@ function movePoint(center): GeoJSON.Point {
   return center;
 }
 
-export const onMousePolyGrab = (e: any) => {
-  map.setPaintProperty(Layer.POINTS, "circle-opacity", 0);
+export const onMousePolyGrab = (e) => {
+  map.setPaintProperty(Layer.POINTS_LAYER, "circle-opacity", 0);
 
   const coords = e.lngLat;
   // Set a UI indicator for dragging.

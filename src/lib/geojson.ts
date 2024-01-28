@@ -10,7 +10,7 @@ const types: { [key: string]: string } = {
   FeatureCollection: "featurecollection",
 };
 
-const normalize = (gj: any) => {
+const normalize = (gj: any): GeoJSON.FeatureCollection | undefined | null => {
   if (!gj || !gj.type) return null;
   var type = types[gj.type];
   if (!type) return null;
