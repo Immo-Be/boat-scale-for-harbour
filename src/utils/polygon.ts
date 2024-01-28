@@ -1,10 +1,10 @@
-import turf, { destination, lineString, point } from "turf";
+import turf, { destination, feature, lineString, point } from "turf";
 import { DEFAULT_UNIT, Layer } from "../constants";
-import { canvas, map } from "../main";
+import { canvas, collection, currentPolygonIndex, map } from "../main";
 import transformTranslate from "@turf/transform-translate";
 import rotate from "@turf/transform-rotate";
 import { GeoJSONSource } from "maplibre-gl";
-import { getCenterOfPolygon } from "./map";
+import { getCenterOfPolygon, getMapSource } from "./map";
 import { polygon } from "@turf/helpers";
 import { v4 as uuidv4 } from "uuid";
 
@@ -149,31 +149,39 @@ export const onMousePolyGrab = (e) => {
   // Set a UI indicator for dragging.
   canvas.style.cursor = "grabbing";
 
-  const polSource = map.getSource(
-    Layer.POLYGONS_SOURCE
-  ) as maplibregl.GeoJSONSource;
+  const polSource = getMapSource(map, Layer.POLYGONS_SOURCE);
 
-  const data = polSource._data;
-
-  if (!data || typeof data === "string") {
-    console.warn("No polygon data in the polSource._");
+  if (!polSource) {
+    console.warn("No valid polygon source", polSource);
     return;
   }
-  // @ts-ignore
-  const turfPolygon = turf.polygon([data.geometry.coordinates[0]]);
+
+  if (currentPolygonIndex === null) {
+    console.warn(
+      "No currentPolygonIndex - the polygon being dragged is not in the feature collection",
+      currentPolygonIndex
+    );
+    return;
+  }
+
+  const polygon = collection.features[currentPolygonIndex];
 
   const turfCenterPoint = point([coords.lng, coords.lat]);
-  const movingPoly = movePolygon(turfPolygon, turfCenterPoint);
+  const movingPoly = movePolygon(polygon, turfCenterPoint);
 
-  polSource.setData(movingPoly);
+  // Merge the moved polygon with the rest of the collection
+  // @ts-ignore
+  collection.features[currentPolygonIndex] = movingPoly;
 
-  const movedPoint = movePoint(turfCenterPoint);
+  polSource.setData(collection);
 
-  const pointSource = map.getSource(
-    Layer.POINTS_SOURCE
-  ) as maplibregl.GeoJSONSource;
+  // const movedPoint = movePoint(turfCenterPoint);
 
-  pointSource.setData(movedPoint);
+  // const pointSource = map.getSource(
+  //   Layer.POINTS_SOURCE
+  // ) as maplibregl.GeoJSONSource;
+
+  // pointSource.setData(movedPoint);
 };
 
 let prevBearing = 0;

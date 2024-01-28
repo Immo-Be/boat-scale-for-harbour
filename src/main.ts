@@ -13,7 +13,7 @@ import {
 // However, there is a bug in the new version that prevents the types from being exported correctly ("@turf/turf v.6.5.0")
 // Todo: Update to the new version once the bug is fixed
 // Remove noImplicitAny to false in tsconfig.json once fixed
-import turf from "turf";
+import turf, { polygon } from "turf";
 import { CENTER, Layer } from "./constants";
 import { getMapInstance, getMapSource, initializeMapLayers } from "./utils/map";
 import { MapMouseEvent } from "maplibre-gl";
@@ -21,7 +21,7 @@ import { MapMouseEvent } from "maplibre-gl";
 // Initialize the map
 export const map = getMapInstance();
 
-const featureCollection: GeoJSON.FeatureCollection = {
+export const collection: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
   features: [
     // createPolygon(
@@ -39,13 +39,14 @@ export const canvas = map.getCanvasContainer();
 
 let isRotating = false;
 let isDragging = false;
+export let currentPolygonIndex: number | null = null;
 
 // const turfCenter = turf.point([
 //   CENTER.lng + Math.random() * 0.001,
 //   CENTER.lat - Math.random() * 0.001,
 // ]);
 
-const boatAdded = () => {
+const addBoat = () => {
   const poly = createPolygon(
     turf.point([
       CENTER.lng + Math.random() * 0.001,
@@ -55,7 +56,7 @@ const boatAdded = () => {
     6.6
   );
 
-  featureCollection.features.push(poly);
+  collection.features.push(poly);
 
   const polygonSource = getMapSource(map, Layer.POLYGONS_SOURCE);
 
@@ -64,13 +65,13 @@ const boatAdded = () => {
     return;
   }
 
-  polygonSource.setData(featureCollection);
+  polygonSource.setData(collection);
 
-  generateRotationPointAndLine(poly);
+  // generateRotationPointAndLine(poly);
 };
 
-function generateRotationPointAndLine(geojson: GeoJSON.Polygon) {
-  const geoPoint = createPoint(geojson);
+function generateRotationPointAndLine(polygon: GeoJSON.Polygon) {
+  const geoPoint = createPoint(polygon);
 
   const pointSource = getMapSource(map, Layer.POINTS_SOURCE);
 
@@ -81,7 +82,7 @@ function generateRotationPointAndLine(geojson: GeoJSON.Polygon) {
 
   pointSource.setData(geoPoint);
 
-  const geoLine = createStringLine(geojson);
+  const geoLine = createStringLine(polygon);
 
   const lineSource = getMapSource(map, Layer.LINE_SOURCE);
 
@@ -110,7 +111,7 @@ function generateRotationPointAndLine(geojson: GeoJSON.Polygon) {
 }
 
 map.once("styledata", () => {
-  initializeMapLayers(map, featureCollection);
+  initializeMapLayers(map, collection);
   // boatAdded();
   // boatAdded();
 
@@ -126,13 +127,13 @@ map.once("styledata", () => {
   //   6.6
   // );
 
-  if (!featureCollection) {
-    console.warn("No valid feature featureCollection", featureCollection);
+  if (!collection) {
+    console.warn("No valid feature featureCollection", collection);
     return;
   }
 
   // featureCollection.features.push(geojson2);
-  console.log("🚀 ~ map.once ~ featureCollection:", featureCollection);
+  // console.log("🚀 ~ map.once ~ featureCollection:", featureCollection);
 
   // map.addSource(Layer.POLYGONS_SOURCE, {
   //   type: "geojson",
@@ -161,6 +162,7 @@ function onMouseRotateUp() {
   adjustLine(null, null, true);
   map.setPaintProperty(Layer.POINTS_LAYER, "circle-opacity", 0);
   isRotating = false;
+  currentPolygonIndex = null;
 }
 
 function onMouseUp(e: MapMouseEvent) {
@@ -173,6 +175,7 @@ function onMouseUp(e: MapMouseEvent) {
   // coordinates.innerHTML = `Longitude: ${coords.lng}<br />Latitude: ${coords.lat}`;
   canvas.style.cursor = "";
   isDragging = false;
+  currentPolygonIndex = null;
 
   // Unbind mouse/touch events
   map.off("mousemove", onMousePolyGrab);
@@ -188,10 +191,16 @@ map.on("mousemove", Layer.POLYGONS_LAYER, (event) => {
     layers: [Layer.POINTS_LAYER],
   });
 
-  const polygon = map.queryRenderedFeatures(event.point, {
+  const { properties } = map.queryRenderedFeatures(event.point, {
     layers: [Layer.POLYGONS_LAYER],
   })[0];
-  console.log("🚀 ~ map.on ~ polygon:", polygon);
+
+  const id = properties.id;
+
+  currentPolygonIndex = collection.features.findIndex(
+    (feature) => feature.properties?.id === id
+  );
+  // console.log("🚀 ~ map.on ~ polygon:", polygon);
 
   const isPointInPolygon = Boolean(point.length);
 
@@ -262,7 +271,7 @@ form!.addEventListener("submit", (e) => {
   e.preventDefault();
   const formData = new FormData(e.target as HTMLFormElement);
   const formProps = Object.fromEntries(formData);
-  boatAdded();
+  addBoat();
 
   console.log("🚀 ~ form!.addEventListener ~ formProps:", formProps);
 });
