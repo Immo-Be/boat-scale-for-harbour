@@ -1,4 +1,4 @@
-import turf, { destination, feature, lineString, point } from "turf";
+import turf, { destination, lineString, point } from "turf";
 import { DEFAULT_UNIT, Layer } from "../constants";
 import { canvas, collection, currentPolygonIndex, map } from "../main";
 import transformTranslate from "@turf/transform-translate";
@@ -12,12 +12,7 @@ import { v4 as uuidv4 } from "uuid";
 // 0.15 means that the triangle in front makes up 15% of the total length of the ship
 const PROTRUSION_FACTOR = 0.15;
 
-export const createPolygon = (
-  center: any,
-  props: Boat
-  // length: number, // height is "Länge" in German
-  // width: number // width is "Breite" in German
-): any => {
+export const createPolygon = (center: any, props: Boat): any => {
   const { width, height, hasProtrusion, name, color, power } = props;
 
   const boatLength = Number(width);
@@ -136,24 +131,10 @@ function movePolygon(poly: any, newCenter: any): GeoJSON.Polygon {
   return movedPoly;
 }
 
-function movePoint(center): GeoJSON.Point {
-  // const movedPoint = point([
-  //   center.geometry.coordinates[0],
-  //   center.geometry.coordinates[1],
-  // ]);
+// function movePoint(center): GeoJSON.Point {
 
-  // Calculate the current center of the polygon
-  // const oldCenter = turf.center(point);
-
-  // // Calculate the distance and bearing from the old center to the new center
-  // const distance = turf.distance(oldCenter, newCenter);
-  // const bearing = turf.bearing(oldCenter, newCenter);
-
-  // // Move the polygon to the new center
-  // const movedPoint = transformTranslate(point, distance, bearing);
-
-  return center;
-}
+//   return center;
+// }
 
 export const onMousePolyGrab = (e) => {
   map.setPaintProperty(Layer.POINTS_LAYER, "circle-opacity", 0);
@@ -187,52 +168,43 @@ export const onMousePolyGrab = (e) => {
   collection.features[currentPolygonIndex] = movingPoly;
 
   polSource.setData(collection);
-
-  // const movedPoint = movePoint(turfCenterPoint);
-
-  // const pointSource = map.getSource(
-  //   Layer.POINTS_SOURCE
-  // ) as maplibregl.GeoJSONSource;
-
-  // pointSource.setData(movedPoint);
 };
 
 let prevBearing = 0;
 
 function rotatePolygon(rotation: number) {
-  const polSource = map.getSource(
-    Layer.POLYGONS_SOURCE
-  ) as maplibregl.GeoJSONSource;
+  const polySource = getMapSource(map, Layer.POLYGONS_SOURCE);
 
-  const data = polSource._data;
-
-  if (!data || typeof data === "string") {
-    console.warn("No polygon data in the polSource._");
-    return;
-  }
-  // @ts-ignore
-  const poly = polygon([data.geometry.coordinates[0]]);
-
-  const polSo2urce = map.getSource(
-    Layer.POINTS_SOURCE
-  ) as maplibregl.GeoJSONSource;
-
-  const da2ta = polSo2urce._data;
-
-  if (!data || typeof data === "string") {
-    console.warn("No polygon data in the polSource._");
+  if (currentPolygonIndex === null || !polySource) {
+    console.warn(
+      "No currentPolygonIndex - the polygon being rotated is not in the feature collection",
+      currentPolygonIndex
+    );
     return;
   }
 
-  const rotated = rotate(poly, rotation, {
+  const poly = collection.features[currentPolygonIndex];
+
+  const pointSource = getMapSource(map, Layer.POINTS_SOURCE);
+
+  if (!pointSource) {
+    console.warn("No point source found.");
+    return;
+  }
+
+  const rotationPoint = pointSource._data;
+
+  const rotatedPoly = rotate(poly, rotation, {
     // @ts-ignore
-    pivot: point(da2ta.geometry.coordinates),
+    pivot: point(rotationPoint.geometry.coordinates),
   });
-  polSource.setData(rotated);
+
+  collection.features[currentPolygonIndex] = rotatedPoly;
+
+  polySource.setData(collection);
 }
 
 export const handleRotate = (event: any) => {
-  console.log("🚀 ~ handleRotate ~ event:", event);
   // Get point source
   const pointSource = map.getSource(
     Layer.POINTS_SOURCE
