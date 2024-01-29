@@ -43,12 +43,13 @@
                 type="number"
                 id="width"
                 name="width"
-                placeholder="Länge hinzufügen"
+                placeholder="Länge hinzufügen in meter"
                 value="50"
+                step=".01"
                 required
               />
               <div class="field-placeholder">
-                <span class="label">Länge</span>
+                <span class="label">Länge (m)</span>
               </div>
             </div>
             <div class="field-wrapper">
@@ -57,17 +58,18 @@
                 type="number"
                 id="height"
                 name="height"
-                placeholder="Breite hinzufügen"
+                placeholder="Breite hinzufügen in meter"
                 value="10"
+                step=".01"
                 required
               />
               <div class="field-placeholder">
-                <span class="label">Breite</span>
+                <span class="label">Breite (m)</span>
               </div>
             </div>
             <div class="select-dropdown">
               <select name="power">
-                <option value="" hidden>Wähle Strom</option>
+                <!-- <option value="" hidden>Wähle Strom</option> -->
                 <option value="none">Kein Strom</option>
                 <option value="16A">16A</option>
                 <option value="32A">32A</option>

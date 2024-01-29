@@ -64,8 +64,8 @@ export const initializeMapLayers = (
     type: "circle",
     source: Layer.POINTS_SOURCE,
     paint: {
-      "circle-radius": 6,
-      "circle-color": "grey",
+      "circle-radius": 6.5,
+      "circle-color": "white",
     },
   });
 

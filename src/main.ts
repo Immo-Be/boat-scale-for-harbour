@@ -13,7 +13,7 @@ import {
 // However, there is a bug in the new version that prevents the types from being exported correctly ("@turf/turf v.6.5.0")
 // Todo: Update to the new version once the bug is fixed
 // Remove noImplicitAny to false in tsconfig.json once fixed
-import turf, { polygon } from "turf";
+import turf from "turf";
 import { CENTER, Layer } from "./constants";
 import { getMapInstance, getMapSource, initializeMapLayers } from "./utils/map";
 import { MapMouseEvent } from "maplibre-gl";
@@ -46,14 +46,15 @@ export let currentPolygonIndex: number | null = null;
 //   CENTER.lat - Math.random() * 0.001,
 // ]);
 
-const addBoat = () => {
+const addBoat = (boatProps: Boat) => {
   const poly = createPolygon(
     turf.point([
       CENTER.lng + Math.random() * 0.001,
       CENTER.lat - Math.random() * 0.001,
     ]),
-    50,
-    6.6
+    boatProps
+    // Number(boatProps.width),
+    // Number(boatProps.height)
   );
 
   collection.features.push(poly);
@@ -187,10 +188,6 @@ function onMouseUp(e: MapMouseEvent) {
 map.on("mousemove", Layer.POLYGONS_LAYER, (event) => {
   //map.setPaintProperty('point', 'circle-color', '#3bb2d0');
 
-  const point = map.queryRenderedFeatures(event.point, {
-    layers: [Layer.POINTS_LAYER],
-  });
-
   const { properties } = map.queryRenderedFeatures(event.point, {
     layers: [Layer.POLYGONS_LAYER],
   })[0];
@@ -200,7 +197,16 @@ map.on("mousemove", Layer.POLYGONS_LAYER, (event) => {
   currentPolygonIndex = collection.features.findIndex(
     (feature) => feature.properties?.id === id
   );
-  // console.log("🚀 ~ map.on ~ polygon:", polygon);
+
+  // Generate rotation point and line for the current polygon
+  const polygon = collection.features[currentPolygonIndex];
+
+  // @ts-ignore
+  generateRotationPointAndLine(polygon);
+
+  const point = map.queryRenderedFeatures(event.point, {
+    layers: [Layer.POINTS_LAYER],
+  });
 
   const isPointInPolygon = Boolean(point.length);
 
@@ -270,8 +276,6 @@ const form = document.querySelector("form");
 form!.addEventListener("submit", (e) => {
   e.preventDefault();
   const formData = new FormData(e.target as HTMLFormElement);
-  const formProps = Object.fromEntries(formData);
-  addBoat();
-
-  console.log("🚀 ~ form!.addEventListener ~ formProps:", formProps);
+  const formProps = Object.fromEntries(formData) as Boat;
+  addBoat(formProps);
 });

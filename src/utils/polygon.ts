@@ -14,11 +14,20 @@ const PROTRUSION_FACTOR = 0.15;
 
 export const createPolygon = (
   center: any,
-  length: number, // height is "Länge" in German
-  width: number // width is "Breite" in German
+  props: Boat
+  // length: number, // height is "Länge" in German
+  // width: number // width is "Breite" in German
 ): any => {
-  const lengthWithOutProtrusion = length * (1 - PROTRUSION_FACTOR);
+  const { width, height, hasProtrusion, name, color, power } = props;
 
+  const boatLength = Number(width);
+  const boatWidth = Number(height);
+
+  const boatHasProtrusion = hasProtrusion === "on";
+
+  const lengthWithOutProtrusion = boatHasProtrusion
+    ? boatLength * (1 - PROTRUSION_FACTOR)
+    : boatLength;
   // Convert width and height to kilometers
   const westPoint = destination(
     center,
@@ -32,8 +41,8 @@ export const createPolygon = (
     90,
     DEFAULT_UNIT
   );
-  const northPoint = destination(center, width / 2, 0, DEFAULT_UNIT);
-  const southPoint = destination(center, width / 2, 180, DEFAULT_UNIT);
+  const northPoint = destination(center, boatWidth / 2, 0, DEFAULT_UNIT);
+  const southPoint = destination(center, boatWidth / 2, 180, DEFAULT_UNIT);
 
   const minLng = westPoint.geometry.coordinates[0];
   const maxLng = eastPoint.geometry.coordinates[0];
@@ -43,39 +52,43 @@ export const createPolygon = (
   // Calculate the point for the triangle
   const trianglePoint = destination(
     eastPoint,
-    (length * (PROTRUSION_FACTOR * 2)) / 2,
+    (boatLength * (PROTRUSION_FACTOR * 2)) / 2,
     90,
     DEFAULT_UNIT
   );
 
-  // Create the polygon with a triangle on the right side
-  const createdPolygon = polygon(
-    [
-      [
-        [minLng, minLat],
-        [minLng, maxLat],
-        [maxLng, maxLat],
+  const polygonPoints = boatHasProtrusion
+    ? [
         [
-          trianglePoint.geometry.coordinates[0],
-          trianglePoint.geometry.coordinates[1],
+          [minLng, minLat],
+          [minLng, maxLat],
+          [maxLng, maxLat],
+          [
+            trianglePoint.geometry.coordinates[0],
+            trianglePoint.geometry.coordinates[1],
+          ],
+          [maxLng, minLat],
+          [minLng, minLat],
         ],
-        [maxLng, minLat],
-        [minLng, minLat],
-      ],
-    ],
-    {
-      color: (() => {
-        const letters = "0123456789ABCDEF";
-        let color = "#";
-        for (let i = 0; i < 6; i++) {
-          color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-      })(),
-      // Todo: set
-      id: uuidv4(),
-    }
-  );
+      ]
+    : [
+        [
+          [minLng, minLat],
+          [minLng, maxLat],
+          [maxLng, maxLat],
+          [maxLng, minLat],
+          [minLng, minLat],
+        ],
+      ];
+
+  // Create the polygon with a triangle on the right side
+  const createdPolygon = polygon(polygonPoints, {
+    //  Todo: Set in the id property of the
+    id: uuidv4(),
+    color,
+    name,
+    power,
+  });
 
   return createdPolygon;
 };
@@ -219,6 +232,7 @@ function rotatePolygon(rotation: number) {
 }
 
 export const handleRotate = (event: any) => {
+  console.log("🚀 ~ handleRotate ~ event:", event);
   // Get point source
   const pointSource = map.getSource(
     Layer.POINTS_SOURCE
