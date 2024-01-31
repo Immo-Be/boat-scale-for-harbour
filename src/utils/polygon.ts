@@ -1,12 +1,12 @@
+import { polygon } from "@turf/helpers";
+import rotate from "@turf/transform-rotate";
+import transformTranslate from "@turf/transform-translate";
+import { GeoJSONSource, MapMouseEvent } from "maplibre-gl";
 import turf, { destination, lineString, point } from "turf";
+import { v4 as uuidv4 } from "uuid";
 import { DEFAULT_UNIT, Layer } from "../constants";
 import { canvas, collection, currentPolygonIndex, map } from "../main";
-import transformTranslate from "@turf/transform-translate";
-import rotate from "@turf/transform-rotate";
-import { GeoJSONSource } from "maplibre-gl";
 import { getCenterOfPolygon, getMapSource } from "./map";
-import { polygon } from "@turf/helpers";
-import { v4 as uuidv4 } from "uuid";
 
 // The factor by which the triangle protrudes from the rectangle aka the ship polygon
 // 0.15 means that the triangle in front makes up 15% of the total length of the ship
@@ -52,29 +52,21 @@ export const createPolygon = (center: any, props: Boat): any => {
     DEFAULT_UNIT
   );
 
-  const polygonPoints = boatHasProtrusion
-    ? [
-        [
-          [minLng, minLat],
-          [minLng, maxLat],
-          [maxLng, maxLat],
-          [
-            trianglePoint.geometry.coordinates[0],
-            trianglePoint.geometry.coordinates[1],
-          ],
-          [maxLng, minLat],
-          [minLng, minLat],
-        ],
-      ]
-    : [
-        [
-          [minLng, minLat],
-          [minLng, maxLat],
-          [maxLng, maxLat],
-          [maxLng, minLat],
-          [minLng, minLat],
-        ],
-      ];
+  const createPolygonPoints = (hasProtrusion: boolean) => {
+    const basePoints = [
+      [minLng, minLat],
+      [minLng, maxLat],
+      [maxLng, maxLat],
+      [maxLng, minLat],
+      [minLng, minLat],
+    ];
+    if (hasProtrusion) {
+      basePoints.splice(3, 0, trianglePoint.geometry.coordinates);
+    }
+    return [basePoints];
+  };
+
+  const polygonPoints = createPolygonPoints(boatHasProtrusion);
 
   // Create the polygon with a triangle on the right side
   const createdPolygon = polygon(polygonPoints, {
@@ -90,16 +82,11 @@ export const createPolygon = (center: any, props: Boat): any => {
 
 export const createPoint = (polygon: GeoJSON.Polygon) => {
   // Calculate the middle of the polygon
-  const rotationPoint = getCenterOfPolygon(polygon);
-
-  return rotationPoint;
+  return getCenterOfPolygon(polygon);
 };
 
 export const createStringLine = (geojson: GeoJSON.Polygon) => {
   // Create a line from the center of the polygon to the point above
-
-  // const center = turf.center(geojson);
-  // Get center of polygon
   const center = getCenterOfPolygon(geojson);
 
   if (!center) {
@@ -131,15 +118,10 @@ function movePolygon(poly: any, newCenter: any): GeoJSON.Polygon {
   return movedPoly;
 }
 
-// function movePoint(center): GeoJSON.Point {
-
-//   return center;
-// }
-
-export const onMousePolyGrab = (e) => {
+export const onMousePolyGrab = (event: MapMouseEvent) => {
   map.setPaintProperty(Layer.POINTS_LAYER, "circle-opacity", 0);
 
-  const coords = e.lngLat;
+  const coords = event.lngLat;
   // Set a UI indicator for dragging.
   canvas.style.cursor = "grabbing";
 
@@ -273,4 +255,28 @@ export const adjustLine = (e: any, origin: any, isReset?: boolean) => {
 
   const lineToMouse = lineString([origin, mouse.geometry.coordinates]);
   lineSource.setData(lineToMouse);
+};
+
+export const generateRotationPointAndLine = (polygon: GeoJSON.Polygon) => {
+  const geoPoint = createPoint(polygon);
+
+  const pointSource = getMapSource(map, Layer.POINTS_SOURCE);
+
+  if (!pointSource || !geoPoint) {
+    console.warn("No valid point or  point source", pointSource, geoPoint);
+    return;
+  }
+
+  pointSource.setData(geoPoint);
+
+  const geoLine = createStringLine(polygon);
+
+  const lineSource = getMapSource(map, Layer.LINE_SOURCE);
+
+  if (!lineSource || !geoLine) {
+    console.warn("No valid line or line source", lineSource, geoLine);
+    return;
+  }
+
+  lineSource.setData(geoLine);
 };

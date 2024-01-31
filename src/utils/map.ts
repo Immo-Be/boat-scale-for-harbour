@@ -1,7 +1,7 @@
 import { CENTER, Layer } from "../constants";
 import maplibregl, { Map } from "maplibre-gl";
 import { mapStyle } from "../map-styles";
-import turf from "turf";
+import centerOfMass from "@turf/center-of-mass";
 
 /**
  * Returns an instance of the map.
@@ -66,6 +66,10 @@ export const initializeMapLayers = (
     paint: {
       "circle-radius": 6.5,
       "circle-color": "white",
+      // @ts-ignore
+      "circle-opacity-transition": {
+        duration: 0,
+      },
     },
   });
 
@@ -100,7 +104,7 @@ export const getMapSource = (map: Map, sourceId: Layer) => {
 };
 
 export const getCenterOfPolygon = (polygon: GeoJSON.Polygon) => {
-  const center = turf.center(polygon as any);
+  const center = centerOfMass(polygon as any);
 
   if (!center || !center.geometry || !center.geometry.coordinates) {
     console.warn("No valid center", center);
