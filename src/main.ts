@@ -19,6 +19,10 @@ import { MapMouseEvent } from "maplibre-gl";
 // Initialize the map
 export const map = getMapInstance();
 
+document.addEventListener("click", (e) => {
+  console.log("🚀 ~ e.target:", e.target);
+});
+
 export const collection: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
   features: [],
@@ -167,12 +171,31 @@ map.on("mouseleave", Layer.POLYGONS_LAYER, () => {
   }
 });
 
-const sidebarToggle = document.querySelector(".sidebar-collapse-toggle");
+const sidebarToggle = document.querySelector(".absolute");
+console.log("🚀 ~ sidebarToggle:", sidebarToggle);
 
 if (sidebarToggle) {
   sidebarToggle.addEventListener("click", () => {
-    const main = document.querySelector(".main-container");
-    main!.classList.toggle("sidebar-is-collapsed");
+    // Toggle my-drawer input checkbox
+
+    console.log("I am clicked");
+
+    const drawer = document.querySelector("#my-drawer") as HTMLInputElement;
+    console.log(
+      "🚀 ~ sidebarToggle.addEventListener ~ drawer:",
+      drawer.checked
+    );
+
+    drawer.checked = !drawer.checked;
+    // console.log("🚀 ~ sidebarToggle.addEventListener ~ drawer:", drawer);
+
+    // drawer.checked = !drawer.checked;
+
+    // const main = document.querySelector(".main-container");
+    // Set custom property --sidebar-widht to 0
+    // main!.style.setProperty("--sidebar-width", "0");
+    // document.documentElement.style.setProperty("--sidebar-width", "0");
+    // main!.classList.toggle("sidebar-is-collapsed");
   });
 } else {
   console.warn(

@@ -39,6 +39,17 @@ h3 {
   grid-template-columns: var(--sidebar-width) 1fr;
   grid-template-rows: 100dvh;
   grid-template-areas: "sidebar map";
+  /* transition: grid-template-columns 0.3s ease-in-out; */
+  z-index: 0;
+}
+
+.main-container {
+  --sidebar-width: clamp(300px, 50vw, 350px);
+  --sidebar-width-collapsed: 0;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: 100dvh;
+  grid-template-areas: "sidebar map";
   transition: grid-template-columns 0.3s ease-in-out;
   z-index: 0;
 }
