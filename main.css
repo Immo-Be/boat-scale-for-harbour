@@ -7,6 +7,11 @@
   --sidebar-width-collapsed: 0;
 }
 
+.drawer-side > *:not(.drawer-overlay) {
+  --tw-translate-x: calc(-100% - 1rem);
+  transform: translateX(var(--tw-translate-x));
+}
+
 *,
 *::before,
 *::after {

@@ -19,9 +19,9 @@ import { MapMouseEvent } from "maplibre-gl";
 // Initialize the map
 export const map = getMapInstance();
 
-document.addEventListener("click", (e) => {
-  console.log("🚀 ~ e.target:", e.target);
-});
+// document.addEventListener("click", (e) => {
+//   console.log("🚀 ~ e.target:", e.target);
+// });
 
 export const collection: GeoJSON.FeatureCollection = {
   type: "FeatureCollection",
@@ -171,20 +171,12 @@ map.on("mouseleave", Layer.POLYGONS_LAYER, () => {
   }
 });
 
-const sidebarToggle = document.querySelector(".absolute");
-console.log("🚀 ~ sidebarToggle:", sidebarToggle);
+// const sidebarToggle = document.querySelector(".absolute");
+const sidebarToggle = document.querySelector(".swap.swap-rotate input");
 
 if (sidebarToggle) {
   sidebarToggle.addEventListener("click", () => {
-    // Toggle my-drawer input checkbox
-
-    console.log("I am clicked");
-
     const drawer = document.querySelector("#my-drawer") as HTMLInputElement;
-    console.log(
-      "🚀 ~ sidebarToggle.addEventListener ~ drawer:",
-      drawer.checked
-    );
 
     drawer.checked = !drawer.checked;
     // console.log("🚀 ~ sidebarToggle.addEventListener ~ drawer:", drawer);
@@ -217,3 +209,30 @@ if (form) {
     "No form found. Please add a form with the class 'boat-form' to the index.html file."
   );
 }
+
+let currentlyCheckedId =
+  document.querySelector("input[name=sidebar-content-area]:checked")?.id ||
+  null;
+
+const sidebarInputs = document.querySelectorAll(
+  "input[name=sidebar-content-area]"
+) as NodeListOf<HTMLInputElement>;
+
+const hiddenInput = document.querySelector(
+  ".hidden input[name=sidebar-content-area]"
+) as HTMLInputElement;
+
+sidebarInputs.forEach((input) => {
+  input.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+    const targetId = target?.id;
+
+    if (targetId === currentlyCheckedId) {
+      hiddenInput.checked = true;
+      currentlyCheckedId = null;
+    } else {
+      target.checked = true;
+      currentlyCheckedId = targetId;
+    }
+  });
+});
